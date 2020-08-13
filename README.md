@@ -1,4 +1,5 @@
-Synthesize is a library containing annotations that allow fields and initializers to be synthesized. Its main goal is allowing multiple inheritance of state in Java.
+jpp is a library that aims to bring C++ features like multiple inheritance of state to Java.
 
-It can be imported from JitPack.
+### use
+JitPack
 
