@@ -1,11 +1,6 @@
 package user11681.jpp;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Test {
-    private static final List<String> thing = new ArrayList<>();
-
     public static void init() {
 //        final StatefulInterface test = new StatefulInterface() {};
         final StatefulImpl impl = new StatefulImpl();

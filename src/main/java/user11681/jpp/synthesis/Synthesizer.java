@@ -25,7 +25,7 @@ import user11681.jpp.asm.DelegatingInsnList;
 public class Synthesizer {
     private static final Logger LOGGER = LogManager.getLogger("jpp/Synthesizer");
     private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<String>> superfaces = new Object2ReferenceOpenHashMap<>();
-    private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<FieldNode>> interfaceFields = new Object2ReferenceOpenHashMap<>();
+    private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<FieldNode>> fields = new Object2ReferenceOpenHashMap<>();
     private static final Object2ReferenceOpenHashMap<String, MethodNode[]> initializerHolders = new Object2ReferenceOpenHashMap<>();
     private static final Object2ReferenceOpenHashMap<String, MethodNode> inlineMethods = new Object2ReferenceOpenHashMap<>();
     private static final Object2ReferenceOpenHashMap<String, ObjectOpenHashSet<String>> implementations = new Object2ReferenceOpenHashMap<>();
@@ -33,123 +33,123 @@ public class Synthesizer {
     private static final ClassLoader LOADER = Thread.currentThread().getContextClassLoader();
 
     public static void transformNew(final ClassNode klass) {
-        if (!(klass.name.startsWith("java/") || klass.name.equals("user11681/jpp/asm/ASMUtil"))) {
-            AnnotationNode[] annotations;
-            AnnotationNode annotation;
-            int annotationCount;
-            int i;
-            int j;
+        AnnotationNode[] annotations;
+        AnnotationNode annotation;
+        MethodNode[] methods;
+        MethodNode method;
+        int annotationCount;
+        int i;
+        int j;
 
-            if (klass.invisibleAnnotations != null) {
-                annotations = klass.invisibleAnnotations.toArray(new AnnotationNode[0]);
-                annotationCount = annotations.length;
+        if (klass.invisibleAnnotations != null) {
+            annotations = klass.invisibleAnnotations.toArray(new AnnotationNode[0]);
+            annotationCount = annotations.length;
 
-                for (i = 0; i < annotationCount; i++) {
-                    annotation = annotations[i];
+            for (i = 0; i < annotationCount; i++) {
+                annotation = annotations[i];
 
-                    if (Type.getDescriptor(Declare.Fields.class).equals(annotation.desc)) {
-                        final AnnotationNode[] declarations = ((ArrayList<AnnotationNode>) ASMUtil.getAnnotationValue(annotation, "value")).toArray(new AnnotationNode[0]);
-                        final int declarationCount = declarations.length;
+                if (Type.getDescriptor(Declare.Fields.class).equals(annotation.desc)) {
+                    final AnnotationNode[] declarations = ((ArrayList<AnnotationNode>) ASMUtil.getAnnotationValue(annotation, "value")).toArray(new AnnotationNode[0]);
+                    final int declarationCount = declarations.length;
 
-                        if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
-                            for (j = 0; j < declarationCount; j++) {
-                                klass.fields.add(getField(klass, declarations[j]));
-                            }
-                        } else {
-                            final FieldNode[] fieldNodes = new FieldNode[declarationCount];
+                    if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
+                        for (j = 0; j < declarationCount; j++) {
+                            klass.fields.add(getField(klass, declarations[j]));
+                        }
+                    } else {
+                        final FieldNode[] fieldNodes = new FieldNode[declarationCount];
 
-                            for (j = 0; j < declarationCount; j++) {
-                                fieldNodes[j] = getField(klass, declarations[j]);
-                            }
-
-                            superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
-                            interfaceFields.put(klass.name, ReferenceArrayList.wrap(fieldNodes));
-                            implementations.put(klass.name, new ObjectOpenHashSet<>());
+                        for (j = 0; j < declarationCount; j++) {
+                            fieldNodes[j] = getField(klass, declarations[j]);
                         }
 
-                        break;
-                    } else if (Type.getDescriptor(Declare.class).equals(annotation.desc)) {
-                        if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
-                            klass.fields.add(getField(klass, annotation));
-                        } else {
-                            superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
-                            interfaceFields.put(klass.name, ReferenceArrayList.wrap(new FieldNode[]{getField(klass, annotation)}));
-                            implementations.put(klass.name, new ObjectOpenHashSet<>());
-                        }
-
-                        break;
+                        superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
+                        fields.put(klass.name, ReferenceArrayList.wrap(fieldNodes));
+                        implementations.put(klass.name, new ObjectOpenHashSet<>());
                     }
+
+                    break;
+                } else if (Type.getDescriptor(Declare.class).equals(annotation.desc)) {
+                    if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
+                        klass.fields.add(getField(klass, annotation));
+                    } else {
+                        superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
+                        fields.put(klass.name, ReferenceArrayList.wrap(new FieldNode[]{getField(klass, annotation)}));
+                        implementations.put(klass.name, new ObjectOpenHashSet<>());
+                    }
+
+                    break;
                 }
             }
+        }
 
-            final List<String> interfaceList = klass.interfaces;
+        final List<String> interfaceList = klass.interfaces;
 
-            if (!interfaceList.isEmpty()) {
+        if (!interfaceList.isEmpty()) {
+            try {
+                Class.forName(ASMUtil.toBinaryName(klass.superName), false, LOADER);
+            } catch (final ClassNotFoundException exception) {
+                throw new RuntimeException(exception);
+            }
+
+            final String[] interfaces = interfaceList.toArray(new String[0]);
+            final int interfaceCount = interfaces.length;
+            String interfase;
+            FieldNode[] fields;
+            FieldNode field;
+            String[] superfaceArray;
+            String[] superface;
+            int fieldCount;
+            int superfaceCount;
+            int k;
+
+            for (i = 0; i < interfaceCount; i++) {
+                interfase = interfaces[i];
+
                 try {
-                    Class.forName(ASMUtil.toBinaryName(klass.superName), false, LOADER);
+                    Class.forName(ASMUtil.toBinaryName(interfase), false, LOADER);
                 } catch (final ClassNotFoundException exception) {
                     throw new RuntimeException(exception);
                 }
 
-                final String[] interfaces = interfaceList.toArray(new String[0]);
-                final int interfaceCount = interfaces.length;
-                String interfase;
-                FieldNode[] fields;
-                FieldNode field;
-                String[] superfaceArray;
-                String[] superface;
-                int fieldCount;
-                int superfaceCount;
-                int k;
+                if (Synthesizer.fields.containsKey(interfase)) {
+                    if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
+                        if (!implementations.get(interfase).contains(klass.superName)) {
+                            fields = Synthesizer.fields.get(interfase).elements();
+                            fieldCount = fields.length;
 
-                for (i = 0; i < interfaceCount; i++) {
-                    interfase = interfaces[i];
+                            for (j = 0; j < fieldCount; j++) {
+                                field = fields[j];
 
-                    try {
-                        Class.forName(ASMUtil.toBinaryName(interfase), false, LOADER);
-                    } catch (final ClassNotFoundException exception) {
-                        throw new RuntimeException(exception);
-                    }
-
-                    if (interfaceFields.containsKey(interfase)) {
-                        if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
-                            if (!implementations.get(interfase).contains(klass.superName)) {
-                                fields = interfaceFields.get(interfase).elements();
-                                fieldCount = fields.length;
-
-                                for (j = 0; j < fieldCount; j++) {
-                                    field = fields[j];
-
-                                    if (!klass.fields.contains(field)) {
-                                        klass.fields.add(field);
-                                    }
-                                }
-
-                                superfaceArray = superfaces.get(interfase).elements();
-                                superfaceCount = superfaceArray.length;
-
-                                for (k = 0; k < superfaceCount; k++) {
-                                    implementations.get(superfaceArray[k]).add(klass.name);
+                                if (!klass.fields.contains(field)) {
+                                    klass.fields.add(field);
                                 }
                             }
-                        } else {
-                            if (implementations.containsKey(klass.name)) {
-                                implementations.get(klass.name).addAll(implementations.get(interfase));
-                                interfaceFields.get(klass.name).addAll(interfaceFields.get(interfase));
-                            } else {
-                                implementations.put(klass.name, new ObjectOpenHashSet<>(implementations.get(interfase)));
-                                interfaceFields.put(klass.name, interfaceFields.get(interfase));
+
+                            superfaceArray = superfaces.get(interfase).elements();
+                            superfaceCount = superfaceArray.length;
+
+                            for (k = 0; k < superfaceCount; k++) {
+                                implementations.get(superfaceArray[k]).add(klass.name);
                             }
-
-                            ReferenceArrayList<String> superfaceList = superfaces.get(klass.name);
-
-                            if (superfaceList == null) {
-                                superfaceList = ReferenceArrayList.wrap(new String[]{klass.name});
-                                superfaces.put(klass.name, superfaceList);
-                            }
-
-                            superfaceList.addAll(superfaces.get(interfase));
                         }
+                    } else {
+                        if (implementations.containsKey(klass.name)) {
+                            implementations.get(klass.name).addAll(implementations.get(interfase));
+                            Synthesizer.fields.get(klass.name).addAll(Synthesizer.fields.get(interfase));
+                        } else {
+                            implementations.put(klass.name, new ObjectOpenHashSet<>(implementations.get(interfase)));
+                            Synthesizer.fields.put(klass.name, Synthesizer.fields.get(interfase));
+                        }
+
+                        ReferenceArrayList<String> superfaceList = superfaces.get(klass.name);
+
+                        if (superfaceList == null) {
+                            superfaceList = ReferenceArrayList.wrap(new String[]{klass.name});
+                            superfaces.put(klass.name, superfaceList);
+                        }
+
+                        superfaceList.addAll(superfaces.get(interfase));
                     }
                 }
             }
@@ -178,8 +178,8 @@ public class Synthesizer {
             if ("<init>".equals(method.name)) {
                 constructors.add(method);
 
-                if (interfaceFields.containsKey(klass.name)) {
-                    fields = interfaceFields.get(klass.name).toArray(new FieldNode[0]);
+                if (Synthesizer.fields.containsKey(klass.name)) {
+                    fields = Synthesizer.fields.get(klass.name).toArray(new FieldNode[0]);
                     fieldCount = fields.length;
 
                     for (j = 0; j < fieldCount; j++) {
