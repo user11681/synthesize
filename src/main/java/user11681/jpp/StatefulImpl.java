@@ -1,6 +1,6 @@
 package user11681.jpp;
 
-import user11681.jpp.synthesis.Declare;
+import user11681.jpp.api.Declare;
 
 @Declare(name = "test", descriptor = "I")
 public class StatefulImpl implements ExtraStatefulInterface {

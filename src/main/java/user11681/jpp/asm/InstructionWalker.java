@@ -32,7 +32,7 @@ public class InstructionWalker implements ASMUtil {
     }
 
     public AbstractInsnNode next() {
-        final AbstractInsnNode instruction = this.instruction.getNext();
+        this.instruction = this.instruction.getNext();
 
         switch (instruction.getOpcode()) {
             case ACONST_NULL:

@@ -1,4 +1,4 @@
-package user11681.jpp.synthesis;
+package user11681.jpp.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;

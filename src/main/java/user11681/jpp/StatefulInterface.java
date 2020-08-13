@@ -2,10 +2,10 @@ package user11681.jpp;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import user11681.jpp.synthesis.Declare;
-import user11681.jpp.synthesis.Getter;
-import user11681.jpp.synthesis.Initializer;
-import user11681.jpp.synthesis.Setter;
+import user11681.jpp.api.Declare;
+import user11681.jpp.api.Getter;
+import user11681.jpp.api.Initializer;
+import user11681.jpp.api.Setter;
 
 @Declare(name = "energy", descriptor = "J")
 @Declare(name = "width", descriptor = "I")

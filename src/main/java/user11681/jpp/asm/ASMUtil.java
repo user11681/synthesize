@@ -30,7 +30,7 @@ import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TableSwitchInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
-import user11681.jpp.synthesis.Inline;
+import user11681.jpp.api.Inline;
 
 public interface ASMUtil extends Opcodes {
     int ABSTRACT_ALL = ACC_NATIVE | ACC_ABSTRACT;
@@ -800,6 +800,11 @@ public interface ASMUtil extends Opcodes {
     }
 
     @Inline
+    static int getReturnOpcode(final MethodNode method) {
+        return getReturnOpcode(Type.getReturnType(method.desc).getDescriptor());
+    }
+
+    @Inline
     static int getReturnOpcode(final String descriptor) {
         switch (descriptor) {
             case "Z":
@@ -819,11 +824,6 @@ public interface ASMUtil extends Opcodes {
             default:
                 return ARETURN;
         }
-    }
-
-    @Inline
-    static int getReturnOpcode(final MethodNode method) {
-        return getReturnOpcode(Type.getReturnType(method.desc).getDescriptor());
     }
 
     @Inline

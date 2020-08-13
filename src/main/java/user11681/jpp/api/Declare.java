@@ -1,4 +1,4 @@
-package user11681.jpp.synthesis;
+package user11681.jpp.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -7,7 +7,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 /**
- * This annotation describes a synthetic field declaration.<br>
+ * a repeatable annotation that describes a synthetic field declaration.<br>
  * It is intended to be used with {@link Getter} or {@link Setter}.
  */
 @Target(ElementType.TYPE)

@@ -6,8 +6,6 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -19,24 +17,29 @@ import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import user11681.jpp.api.AccessType;
+import user11681.jpp.api.Declare;
+import user11681.jpp.api.Getter;
+import user11681.jpp.api.Initializer;
+import user11681.jpp.api.Inline;
+import user11681.jpp.api.Setter;
 import user11681.jpp.asm.ASMUtil;
 import user11681.jpp.asm.DelegatingInsnList;
 
 public class Synthesizer {
-    private static final Logger LOGGER = LogManager.getLogger("jpp/Synthesizer");
     private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<String>> superfaces = new Object2ReferenceOpenHashMap<>();
-    private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<FieldNode>> fields = new Object2ReferenceOpenHashMap<>();
+    private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<FieldNode>> inheritableFields = new Object2ReferenceOpenHashMap<>();
+    private static final Object2ReferenceOpenHashMap<String, ReferenceArrayList<AccessorInfo>> inheritableMethods = new Object2ReferenceOpenHashMap<>();
+    private static final Object2ReferenceOpenHashMap<String, ObjectOpenHashSet<String>> fieldInheritors = new Object2ReferenceOpenHashMap<>();
+    private static final Object2ReferenceOpenHashMap<String, ObjectOpenHashSet<String>> methodInheritors = new Object2ReferenceOpenHashMap<>();
     private static final Object2ReferenceOpenHashMap<String, MethodNode[]> initializerHolders = new Object2ReferenceOpenHashMap<>();
     private static final Object2ReferenceOpenHashMap<String, MethodNode> inlineMethods = new Object2ReferenceOpenHashMap<>();
-    private static final Object2ReferenceOpenHashMap<String, ObjectOpenHashSet<String>> implementations = new Object2ReferenceOpenHashMap<>();
 
     private static final ClassLoader LOADER = Thread.currentThread().getContextClassLoader();
 
-    public static void transformNew(final ClassNode klass) {
+    public static void transform(final ClassNode klass) {
         AnnotationNode[] annotations;
         AnnotationNode annotation;
-        MethodNode[] methods;
-        MethodNode method;
         int annotationCount;
         int i;
         int j;
@@ -64,8 +67,8 @@ public class Synthesizer {
                         }
 
                         superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
-                        fields.put(klass.name, ReferenceArrayList.wrap(fieldNodes));
-                        implementations.put(klass.name, new ObjectOpenHashSet<>());
+                        inheritableFields.put(klass.name, ReferenceArrayList.wrap(fieldNodes));
+                        fieldInheritors.put(klass.name, new ObjectOpenHashSet<>());
                     }
 
                     break;
@@ -74,8 +77,8 @@ public class Synthesizer {
                         klass.fields.add(getField(klass, annotation));
                     } else {
                         superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
-                        fields.put(klass.name, ReferenceArrayList.wrap(new FieldNode[]{getField(klass, annotation)}));
-                        implementations.put(klass.name, new ObjectOpenHashSet<>());
+                        inheritableFields.put(klass.name, ReferenceArrayList.wrap(new FieldNode[]{getField(klass, annotation)}));
+                        fieldInheritors.put(klass.name, new ObjectOpenHashSet<>());
                     }
 
                     break;
@@ -83,112 +86,14 @@ public class Synthesizer {
             }
         }
 
-        final List<String> interfaceList = klass.interfaces;
-
-        if (!interfaceList.isEmpty()) {
-            try {
-                Class.forName(ASMUtil.toBinaryName(klass.superName), false, LOADER);
-            } catch (final ClassNotFoundException exception) {
-                throw new RuntimeException(exception);
-            }
-
-            final String[] interfaces = interfaceList.toArray(new String[0]);
-            final int interfaceCount = interfaces.length;
-            String interfase;
-            FieldNode[] fields;
-            FieldNode field;
-            String[] superfaceArray;
-            String[] superface;
-            int fieldCount;
-            int superfaceCount;
-            int k;
-
-            for (i = 0; i < interfaceCount; i++) {
-                interfase = interfaces[i];
-
-                try {
-                    Class.forName(ASMUtil.toBinaryName(interfase), false, LOADER);
-                } catch (final ClassNotFoundException exception) {
-                    throw new RuntimeException(exception);
-                }
-
-                if (Synthesizer.fields.containsKey(interfase)) {
-                    if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
-                        if (!implementations.get(interfase).contains(klass.superName)) {
-                            fields = Synthesizer.fields.get(interfase).elements();
-                            fieldCount = fields.length;
-
-                            for (j = 0; j < fieldCount; j++) {
-                                field = fields[j];
-
-                                if (!klass.fields.contains(field)) {
-                                    klass.fields.add(field);
-                                }
-                            }
-
-                            superfaceArray = superfaces.get(interfase).elements();
-                            superfaceCount = superfaceArray.length;
-
-                            for (k = 0; k < superfaceCount; k++) {
-                                implementations.get(superfaceArray[k]).add(klass.name);
-                            }
-                        }
-                    } else {
-                        if (implementations.containsKey(klass.name)) {
-                            implementations.get(klass.name).addAll(implementations.get(interfase));
-                            Synthesizer.fields.get(klass.name).addAll(Synthesizer.fields.get(interfase));
-                        } else {
-                            implementations.put(klass.name, new ObjectOpenHashSet<>(implementations.get(interfase)));
-                            Synthesizer.fields.put(klass.name, Synthesizer.fields.get(interfase));
-                        }
-
-                        ReferenceArrayList<String> superfaceList = superfaces.get(klass.name);
-
-                        if (superfaceList == null) {
-                            superfaceList = ReferenceArrayList.wrap(new String[]{klass.name});
-                            superfaces.put(klass.name, superfaceList);
-                        }
-
-                        superfaceList.addAll(superfaces.get(interfase));
-                    }
-                }
-            }
-        }
-    }
-
-    private static void transform(final ClassNode klass) {
         final MethodNode[] methods = klass.methods.toArray(new MethodNode[0]);
         final int methodCount = methods.length;
         MethodNode method;
-        AnnotationNode[] annotations;
-        AnnotationNode annotation;
-        int annotationCount;
-        int fieldCount;
-        int i;
-        int j;
-
-        final ReferenceArrayList<MethodNode> constructors = new ReferenceArrayList<>();
-        final ReferenceArrayList<MethodNode> initializers = new ReferenceArrayList<>();
-        FieldNode[] fields;
-        FieldNode field;
 
         for (i = 0; i < methodCount; i++) {
             method = methods[i];
 
-            if ("<init>".equals(method.name)) {
-                constructors.add(method);
-
-                if (Synthesizer.fields.containsKey(klass.name)) {
-                    fields = Synthesizer.fields.get(klass.name).toArray(new FieldNode[0]);
-                    fieldCount = fields.length;
-
-                    for (j = 0; j < fieldCount; j++) {
-                        field = fields[j];
-
-
-                    }
-                }
-            } else if (method.invisibleAnnotations != null) {
+            if (method.invisibleAnnotations != null) {
                 annotations = method.invisibleAnnotations.toArray(new AnnotationNode[0]);
                 annotationCount = annotations.length;
 
@@ -196,39 +101,173 @@ public class Synthesizer {
                     annotation = annotations[j];
 
                     if (Type.getDescriptor(Getter.class).equals(annotation.desc)) {
-                        get(klass, method, annotation);
-                    } else if (Type.getDescriptor(Setter.class).equals(annotation.desc)) {
-                        set(klass, method, annotation);
-                    } else if (Type.getDescriptor(Inline.class).equals(annotation.desc)) {
-                        inlineMethods.put(klass.name + method.name + method.desc, method);
-                    } else if (Type.getDescriptor(Initializer.class).equals(annotation.desc)) {
-                        if (ASMUtil.getAnnotationValue(annotation, "type", Initializer.Type.CONSTRUCTOR) == Initializer.Type.CONSTRUCTOR) {
-                            constructors.add(method);
-                        } else {
-                            initializers.add(method);
+                        getter(klass, method, annotation);
+
+                        if ((klass.access & Opcodes.ACC_INTERFACE) != 0 && !superfaces.containsKey(klass.name)) {
+                            superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
+                            methodInheritors.put(klass.name, new ObjectOpenHashSet<>());
                         }
+                    }
+
+                    if (Type.getDescriptor(Setter.class).equals(annotation.desc)) {
+                        setter(klass, method, annotation);
+
+                        if ((klass.access & Opcodes.ACC_INTERFACE) != 0 && !superfaces.containsKey(klass.name)) {
+                            superfaces.put(klass.name, ReferenceArrayList.wrap(new String[]{klass.name}));
+                            methodInheritors.put(klass.name, new ObjectOpenHashSet<>());
+                        }
+                    }
+
+                    if (Type.getDescriptor(Inline.class).equals(annotation.desc)) {
+                        inlineMethods.put(klass.name + method.name + method.desc, method);
+//                    } else if (Type.getDescriptor(Initializer.class).equals(annotation.desc)) {
+//                        if (ASMUtil.getAnnotationValue(annotation, "type", Initializer.Type.CONSTRUCTOR) == Initializer.Type.CONSTRUCTOR) {
+//                            constructors.add(method);
+//                        } else {
+//                            initializers.add(method);
+//                        }
                     }
                 }
             }
         }
 
-        final MethodNode[] constructorArray = constructors.toArray(new MethodNode[0]);
-        final MethodNode[] initializerArray = initializers.toArray(new MethodNode[0]);
-        MethodNode initializer;
-
-        initializerHolders.put(klass.name, constructorArray);
-
-        for (i = 0; i < initializerArray.length; i++) {
-            initializer = initializerArray[i];
-
-            for (j = 0; j < constructorArray.length; j++) {
-                ASMUtil.insertBeforeEveryReturn(constructorArray[j], initializer.instructions);
-            }
-
-            klass.methods.remove(initializer);
+        try {
+            Class.forName(ASMUtil.toBinaryName(klass.superName), false, LOADER);
+        } catch (final ClassNotFoundException exception) {
+            throw new RuntimeException(exception);
         }
 
-        extend(klass, methods);
+        final List<String> supertypeList = klass.interfaces;
+        final int supertypeCount = supertypeList.size() + 1;
+        final String[] supertypes = supertypeList.toArray(new String[supertypeCount]);
+        supertypes[supertypeCount - 1] = klass.superName;
+        String supertype;
+        FieldNode[] fields;
+        FieldNode field;
+        String[] superfaceArray;
+        AccessorInfo[] accessors;
+        AccessorInfo accessor;
+        int fieldCount;
+        int superfaceCount;
+        int accessorCount;
+        int k;
+        ReferenceArrayList<AccessorInfo> superaccessorList;
+        ReferenceArrayList<AccessorInfo> accessorList;
+        ReferenceArrayList<String> superfaceList;
+        ReferenceArrayList<String> supersuperfaceList;
+        Object2ReferenceOpenHashMap<String, MethodNode> methodIdentifiers = null;
+        ObjectOpenHashSet<String> currentImplementations;
+
+
+        for (i = 0; i < supertypeCount; i++) {
+            supertype = supertypes[i];
+
+            try {
+                Class.forName(ASMUtil.toBinaryName(supertype), false, LOADER);
+            } catch (final ClassNotFoundException exception) {
+                throw new RuntimeException(exception);
+            }
+
+            if (inheritableFields.containsKey(supertype)) {
+                if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
+                    if (!fieldInheritors.get(supertype).contains(klass.superName)) {
+                        fields = inheritableFields.get(supertype).elements();
+                        fieldCount = fields.length;
+
+                        for (j = 0; j < fieldCount; j++) {
+                            field = fields[j];
+
+                            if (!klass.fields.contains(field)) {
+                                klass.fields.add(field);
+                            }
+                        }
+
+                        superfaceArray = superfaces.get(supertype).elements();
+                        superfaceCount = superfaceArray.length;
+
+                        for (k = 0; k < superfaceCount; k++) {
+                            fieldInheritors.get(superfaceArray[k]).add(klass.name);
+                        }
+                    }
+                } else {
+                    if (fieldInheritors.containsKey(klass.name)) {
+                        fieldInheritors.get(klass.name).addAll(fieldInheritors.get(supertype));
+                        inheritableFields.get(klass.name).addAll(inheritableFields.get(supertype));
+                    } else {
+                        fieldInheritors.put(klass.name, new ObjectOpenHashSet<>(fieldInheritors.get(supertype)));
+                        inheritableFields.put(klass.name, inheritableFields.get(supertype));
+                    }
+
+                    superfaceList = superfaces.get(klass.name);
+
+                    if (superfaceList == null) {
+                        superfaceList = ReferenceArrayList.wrap(new String[]{klass.name});
+                        superfaces.put(klass.name, superfaceList);
+                    }
+
+                    superfaceList.addAll(superfaces.get(supertype));
+                }
+            }
+
+            if (inheritableMethods.containsKey(supertype)) {
+                superaccessorList = inheritableMethods.get(supertype);
+                accessors = superaccessorList.elements();
+                accessorCount = accessors.length;
+
+                if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
+                    if (methodIdentifiers == null) {
+                        methodIdentifiers = new Object2ReferenceOpenHashMap<>();
+
+                        for (j = 0; j < methodCount; j++) {
+                            methodIdentifiers.put((method = methods[j]).name + method.desc, method);
+                        }
+                    }
+
+                    for (j = 0; j < accessorCount; j++) {
+                        accessor = accessors[j];
+
+                        if (methodIdentifiers.containsKey(accessor.name + accessor.descriptor)) {
+                            accessor.accept(methodIdentifiers.get(accessor.name + accessor.descriptor), klass.name);
+                        } else {
+                            klass.methods.add(accessor.toNode(klass.name));
+                        }
+                    }
+
+                    currentImplementations = methodInheritors.get(klass.name);
+
+                    if (currentImplementations == null) {
+                        methodInheritors.put(klass.name, new ObjectOpenHashSet<>());
+                    } else {
+                        methodInheritors.get(supertype).addAll(currentImplementations);
+                    }
+                } else {
+                    accessorList = inheritableMethods.get(klass.name);
+
+                    if (accessorList ==  null) {
+                        inheritableMethods.put(klass.name, ReferenceArrayList.wrap(superaccessorList.elements().clone()));
+                    } else {
+                        accessorList.addAll(superaccessorList);
+                    }
+
+                    superfaceList = superfaces.get(klass.name);
+
+                    if (superfaceList == null) {
+                        superfaceList = ReferenceArrayList.wrap(new String[]{klass.name});
+                        superfaces.put(klass.name, superfaceList);
+                    }
+
+                    supersuperfaceList = superfaces.get(supertype);
+
+                    if (supersuperfaceList != null) {
+                        superfaceList.addAll(supersuperfaceList);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void transformOld(final ClassNode klass) {
+        extend(klass, klass.methods.toArray(new MethodNode[0]));
     }
 
     private static void inline(final MethodNode in) {
@@ -357,64 +396,77 @@ public class Synthesizer {
         return new FieldNode(ASMUtil.getAnnotationValue(annotation, "access", Declare.DEFAULT_ACCESS), name, ASMUtil.getAnnotationValue(annotation, "descriptor"), null, null);
     }
 
-    private static void get(final ClassNode klass, final MethodNode method, final AnnotationNode annotation) {
-        final String fieldDescriptor = Type.getReturnType(method.desc).getDescriptor();
+    private static void getter(final ClassNode klass, final MethodNode method, final AnnotationNode annotation) {
+        final int access = setAndGetAccess(method, annotation);
         final String fieldName = ASMUtil.getAnnotationValue(annotation, "value");
-        final DelegatingInsnList instructions = new DelegatingInsnList();
+        final String fieldDescriptor = ASMUtil.getReturnType(method.desc);
 
-        instructions.addVarInsn(Opcodes.ALOAD, 0);
-        instructions.addFieldInsn(Opcodes.GETFIELD, klass.name, fieldName, fieldDescriptor);
+        if ((klass.access & Opcodes.ACC_INTERFACE) + (method.access & Opcodes.ACC_NATIVE) == 0) {
+            final DelegatingInsnList instructions = new DelegatingInsnList();
 
-        if (insertAndSetAccess(method, annotation, instructions)) {
+            instructions.addVarInsn(Opcodes.ALOAD, 0);
+            instructions.addFieldInsn(Opcodes.GETFIELD, klass.name, fieldName, fieldDescriptor);
             instructions.addInsn(ASMUtil.getReturnOpcode(fieldDescriptor));
 
-            method.instructions.insert(instructions);
-        }
-    }
+            ASMUtil.insertBeforeEveryReturn(method, instructions);
+        } else {
+            final ReferenceArrayList<AccessorInfo> accessors = inheritableMethods.get(klass.name);
+            final GetterInfo info = new GetterInfo(method);
+            info.access = access;
+            info.fieldName = fieldName;
+            info.fieldDescriptor = fieldDescriptor;
 
-    private static void set(final ClassNode klass, MethodNode method, final AnnotationNode annotation) {
-        final String fieldDescriptor = ASMUtil.getExplicitParameters(method).get(0);
-        final String fieldName = ASMUtil.getAnnotationValue(annotation, "value");
-        final DelegatingInsnList instructions = new DelegatingInsnList();
-
-        instructions.addVarInsn(Opcodes.ALOAD, 0);
-        instructions.addVarInsn(ASMUtil.getLoadOpcode(fieldDescriptor), 1);
-        instructions.addFieldInsn(Opcodes.PUTFIELD, klass.name, fieldName, fieldDescriptor);
-
-        if (insertAndSetAccess(method, annotation, instructions)) {
-            instructions.addInsn(ASMUtil.getReturnOpcode(method));
-
-            method.instructions.insert(instructions);
-        }
-    }
-
-    private static boolean insertAndSetAccess(final MethodNode method, final AnnotationNode annotation, final InsnList instructions) {
-        final int access = ASMUtil.getAnnotationValue(annotation, "access", Setter.DEFAULT_ACCESS);
-        final boolean override = ASMUtil.getAnnotationValue(annotation, "overrideAccess", true);
-
-        boolean incomplete = true;
-
-        for (final AbstractInsnNode instruction : method.instructions) {
-            if (ASMUtil.isReturnOpcode(instruction.getOpcode())) {
-                method.instructions.insertBefore(instruction, instructions);
-
-                incomplete = false;
+            if (accessors == null) {
+                inheritableMethods.put(klass.name, ReferenceArrayList.wrap(new AccessorInfo[]{info}));
+            } else {
+                accessors.add(info);
             }
         }
+    }
+
+    private static void setter(final ClassNode klass, MethodNode method, final AnnotationNode annotation) {
+        final ReferenceArrayList<String> descriptor = ASMUtil.parseDescriptor(method);
+        final String fieldName = ASMUtil.getAnnotationValue(annotation, "value");
+        final String fieldDescriptor = descriptor.get(0);
+        final int access = setAndGetAccess(method, annotation);
+
+        if ((klass.access & Opcodes.ACC_INTERFACE) + (method.access & Opcodes.ACC_NATIVE) == 0) {
+            final DelegatingInsnList instructions = new DelegatingInsnList();
+
+            instructions.addVarInsn(Opcodes.ALOAD, 0);
+            instructions.addVarInsn(Opcodes.ALOAD, 1);
+            instructions.addFieldInsn(Opcodes.PUTFIELD, klass.name, fieldName, fieldDescriptor);
+            instructions.addVarInsn(ASMUtil.getLoadOpcode(fieldDescriptor), 1);
+
+            ASMUtil.insertBeforeEveryReturn(method, instructions);
+        } else {
+            final ReferenceArrayList<AccessorInfo> accessors = inheritableMethods.get(klass.name);
+            final SetterInfo info = new SetterInfo(method);
+            info.access = access;
+            info.fieldName = fieldName;
+            info.fieldDescriptor = fieldDescriptor;
+
+            if (accessors == null) {
+                inheritableMethods.put(klass.name, ReferenceArrayList.wrap(new AccessorInfo[]{info}));
+            } else {
+                accessors.add(info);
+            }
+        }
+    }
+
+    private static int setAndGetAccess(final MethodNode method, final AnnotationNode annotation) {
+        final int access = ASMUtil.getAnnotationValue(annotation, "access", Setter.DEFAULT_ACCESS);
+        final int newAccess;
 
         if (access == Getter.DEFAULT_ACCESS) {
-            if (override && incomplete) {
-                method.access &= ~ASMUtil.ABSTRACT_ALL;
-            }
+            newAccess = method.access & ~ASMUtil.ACC_NATIVE;
+        } else if (ASMUtil.getAnnotationValue(annotation, "accessType", AccessType.OVERRIDE) == AccessType.OVERRIDE) {
+            newAccess = access;
         } else {
-            if (override) {
-                method.access = access;
-            } else {
-                method.access |= access;
-            }
+            newAccess = method.access | access;
         }
 
-        return incomplete;
+        return newAccess;
     }
 
     private static boolean isConstructor(final MethodNode method) {
@@ -454,8 +506,4 @@ public class Synthesizer {
             }
         }
     }*/
-
-    static {
-        LOGGER.info("Initializing.");
-    }
 }

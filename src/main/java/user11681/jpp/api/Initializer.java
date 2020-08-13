@@ -1,9 +1,9 @@
-package user11681.jpp.synthesis;
+package user11681.jpp.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
-import static user11681.jpp.synthesis.Initializer.Type.CONSTRUCTOR;
+import static user11681.jpp.api.Initializer.Type.CONSTRUCTOR;
 
 /**
  * This annotation interface marks a method as an initializer.<br>
