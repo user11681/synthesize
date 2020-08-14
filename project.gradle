@@ -1,1 +1,5 @@
 version = "0.0.0"
+
+dependencies {
+    modApi include("${project.GFH}")
+}

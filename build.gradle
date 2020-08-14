@@ -46,8 +46,6 @@ dependencies {
 
     testImplementation "${project.junit}"
 
-    modApi "${project.GFH}"
-
 //    modImplementation "com.jamieswhiteshirt:developer-mode:1.0.15"
 }
 

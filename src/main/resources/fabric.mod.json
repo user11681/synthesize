@@ -11,7 +11,7 @@
         "gfh:prePreLaunch": [
             "user11681.jpp.Jpp::init"
         ],
-        "jpp:post": [
+        "jpp:postinit": [
             "user11681.jpp.Test::init"
         ]
     },

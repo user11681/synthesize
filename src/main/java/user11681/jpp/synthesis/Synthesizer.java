@@ -401,7 +401,13 @@ public class Synthesizer {
         final String fieldName = ASMUtil.getAnnotationValue(annotation, "value");
         final String fieldDescriptor = ASMUtil.getReturnType(method.desc);
 
-        if ((klass.access & Opcodes.ACC_INTERFACE) + (method.access & Opcodes.ACC_NATIVE) == 0) {
+        if ((method.access & Opcodes.ACC_NATIVE) != 0) {
+            method.visitVarInsn(Opcodes.ALOAD, 0);
+            method.visitFieldInsn(Opcodes.GETFIELD, klass.name, fieldName, fieldDescriptor);
+            method.visitInsn(ASMUtil.getReturnOpcode(fieldDescriptor));
+
+            method.access = access;
+        } else if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
             final DelegatingInsnList instructions = new DelegatingInsnList();
 
             instructions.addVarInsn(Opcodes.ALOAD, 0);
@@ -409,6 +415,8 @@ public class Synthesizer {
             instructions.addInsn(ASMUtil.getReturnOpcode(fieldDescriptor));
 
             ASMUtil.insertBeforeEveryReturn(method, instructions);
+
+            method.access = access;
         } else {
             final ReferenceArrayList<AccessorInfo> accessors = inheritableMethods.get(klass.name);
             final GetterInfo info = new GetterInfo(method);
@@ -430,15 +438,23 @@ public class Synthesizer {
         final String fieldDescriptor = descriptor.get(0);
         final int access = setAndGetAccess(method, annotation);
 
-        if ((klass.access & Opcodes.ACC_INTERFACE) + (method.access & Opcodes.ACC_NATIVE) == 0) {
+        if ((method.access & Opcodes.ACC_NATIVE) != 0) {
+            method.visitVarInsn(Opcodes.ALOAD, 0);
+            method.visitVarInsn(ASMUtil.getLoadOpcode(fieldDescriptor), 1);
+            method.visitFieldInsn(Opcodes.PUTFIELD, klass.name, fieldName, fieldDescriptor);
+            method.visitInsn(ASMUtil.getReturnOpcode(descriptor.top()));
+
+            method.access = access;
+        } else if ((klass.access & Opcodes.ACC_INTERFACE) == 0) {
             final DelegatingInsnList instructions = new DelegatingInsnList();
 
             instructions.addVarInsn(Opcodes.ALOAD, 0);
-            instructions.addVarInsn(Opcodes.ALOAD, 1);
-            instructions.addFieldInsn(Opcodes.PUTFIELD, klass.name, fieldName, fieldDescriptor);
             instructions.addVarInsn(ASMUtil.getLoadOpcode(fieldDescriptor), 1);
+            instructions.addFieldInsn(Opcodes.PUTFIELD, klass.name, fieldName, fieldDescriptor);
 
             ASMUtil.insertBeforeEveryReturn(method, instructions);
+
+            method.access = access;
         } else {
             final ReferenceArrayList<AccessorInfo> accessors = inheritableMethods.get(klass.name);
             final SetterInfo info = new SetterInfo(method);

@@ -801,7 +801,7 @@ public interface ASMUtil extends Opcodes {
 
     @Inline
     static int getReturnOpcode(final MethodNode method) {
-        return getReturnOpcode(Type.getReturnType(method.desc).getDescriptor());
+        return getReturnOpcode(getReturnType(method.desc));
     }
 
     @Inline

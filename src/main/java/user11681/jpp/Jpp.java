@@ -11,7 +11,7 @@ public class Jpp {
     private static  final Logger LOGGER = LogManager.getLogger("jpp");
 
     public static void init() throws ClassNotFoundException {
-        EntrypointUtils.invoke("jpp:pre", Runnable.class, Runnable::run);
+        EntrypointUtils.invoke("jpp:preinit", Runnable.class, Runnable::run);
 
         Class.forName("user11681.jpp.synthesis.Synthesizer");
         Class.forName("user11681.jpp.asm.ASMUtil");
@@ -20,6 +20,6 @@ public class Jpp {
         TransformerApi.registerPostMixinAsmClassTransformer((final String name, final ClassNode klass) -> Synthesizer.transform(klass));
         LOGGER.info("Done.");
 
-        EntrypointUtils.invoke("jpp:post", Runnable.class, Runnable::run);
+        EntrypointUtils.invoke("jpp:postinit", Runnable.class, Runnable::run);
     }
 }
