@@ -333,7 +333,6 @@ public interface ASMUtil extends Opcodes {
     }
 
     @Inline
-    @SuppressWarnings("unchecked")
     static <T extends AbstractInsnNode> T copyInstruction(final T instruction) {
         if (instruction instanceof InsnNode) {
             return (T) new InsnNode(instruction.getOpcode());

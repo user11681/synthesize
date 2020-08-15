@@ -1,6 +1,5 @@
 package user11681.jpp.synthesis;
 
-import com.sun.org.apache.bcel.internal.classfile.ClassFormatException;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
@@ -368,7 +367,7 @@ public class Synthesizer {
                             }
 
                             if (!remainingSupertypes.isEmpty()) {
-                                throw new ClassFormatException(String.format("constructor %s::%s does not call a constructor of its supertype %s", klass.name, method.name + method.desc, supertype));
+                                throw new ClassFormatError(String.format("constructor %s::%s does not call a constructor of its supertype %s", klass.name, method.name + method.desc, supertype));
                             }
                         }
                     }
