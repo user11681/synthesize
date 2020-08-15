@@ -2,4 +2,9 @@ version = "0.0.0"
 
 dependencies {
     modApi include("${project.GFH}")
+//    modApi "${project.api}"
+
+//    modImplementation("${project.modMenu}") {
+//        exclude module: "fabric-api"
+//    }
 }

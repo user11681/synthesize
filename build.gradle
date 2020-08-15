@@ -23,6 +23,10 @@ repositories {
     }
 
     maven {
+        url "https://dl.bintray.com/ladysnake/libs"
+    }
+
+    maven {
         name "Cotton"
         url "https://server.bbkr.space/artifactory/libs-release"
     }

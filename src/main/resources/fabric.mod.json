@@ -17,5 +17,8 @@
     },
     "authors": [
         "user11681"
-    ]
+    ],
+    "custom": {
+        "modmenu:api": true
+    }
 }

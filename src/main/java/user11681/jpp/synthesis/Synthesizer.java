@@ -266,10 +266,6 @@ public class Synthesizer {
         }
     }
 
-    private static void transformOld(final ClassNode klass) {
-        extend(klass, klass.methods.toArray(new MethodNode[0]));
-    }
-
     private static void inline(final MethodNode in) {
         AbstractInsnNode instruction = in.instructions.getFirst();
         AbstractInsnNode inlineInstruction;
@@ -325,11 +321,10 @@ public class Synthesizer {
     }
 
     private static void extend(final ClassNode klass, final MethodNode[] methods) {
-        final ObjectOpenHashSet<String> supertypeList = new ObjectOpenHashSet<>(klass.interfaces);
-        supertypeList.add(klass.superName);
+        final int supertypeCount = klass.interfaces.size() + 1;
+        final String[] supertypes = klass.interfaces.toArray(new String[supertypeCount]);
+        supertypes[supertypeCount - 1] = klass.superName;
 
-        final String[] supertypes = supertypeList.toArray(new String[0]);
-        final int supertypeCount = supertypes.length;
         final int methodCount = methods.length;
         int j;
         int k;
@@ -359,7 +354,7 @@ public class Synthesizer {
                     method = methods[j];
 
                     if (isConstructor(method)) {
-                        remainingSupertypes = new ObjectOpenHashSet<>(supertypeList);
+                        remainingSupertypes = new ObjectOpenHashSet<>(klass.interfaces);
 
                         for (k = 0; k < superconstructorCount; k++) {
                             instruction = method.instructions.getFirst();

@@ -12,14 +12,15 @@ public class Jpp {
 
     public static void init() throws ClassNotFoundException {
         EntrypointUtils.invoke("jpp:preinit", Runnable.class, Runnable::run);
+        LOGGER.info("Initializing.");
 
+        // initialize these classes before registering the transformer to prevent recursive class loading attempts
         Class.forName("user11681.jpp.synthesis.Synthesizer");
         Class.forName("user11681.jpp.asm.ASMUtil");
 
-        LOGGER.info("Initializing.");
         TransformerApi.registerPostMixinAsmClassTransformer((final String name, final ClassNode klass) -> Synthesizer.transform(klass));
-        LOGGER.info("Done.");
 
+        LOGGER.info("Done.");
         EntrypointUtils.invoke("jpp:postinit", Runnable.class, Runnable::run);
     }
 }
