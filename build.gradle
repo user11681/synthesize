@@ -1,9 +1,9 @@
 plugins {
     id "fabric-loom" version "0.5-SNAPSHOT"
     id "maven-publish"
+    id "maven"
 }
 
-apply plugin: "maven"
 apply from: "project.gradle"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
