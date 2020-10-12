@@ -1,8 +1,14 @@
-package user11681.jpp;
+package test;
 
-public class Test {
+import user11681.jpp.annotation.Entrypoint;
+import user11681.jpp.annotation.ModInterface;
+
+@ModInterface(id = {"jpp", "sedg"}, type = "java.lang.Cloneable")
+@ModInterface(id = "jpp", type = "java.lang.Cloneable")
+@Entrypoint(id = "jpp", entrypoints = "gfh:prePreLaunch")
+public class JppTest {
     public static void init() {
-//        final StatefulInterface test = new StatefulInterface() {};
+        final StatefulInterface test = new StatefulInterface() {};
         final StatefulImpl impl = new StatefulImpl();
         final StatefulImplImpl implImpl = new StatefulImplImpl(43896);
 

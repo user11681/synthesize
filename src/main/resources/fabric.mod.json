@@ -2,14 +2,14 @@
     "schemaVersion": 1,
     "name": "jpp",
     "id": "jpp",
-    "description": "a library that aims to bring C++ features to Java and more",
-    "version": "0.0.0",
+    "description": "just what Dr. Java never wanted",
+    "version": "${version}",
     "license": "GNU GPL v3.0",
     "icon": "assets/jpp/icon.png",
     "environment": "*",
     "entrypoints": {
-        "gfh:prePreLaunch": [
-            "user11681.jpp.Jpp::init"
+        "gfh:prePrePreLaunch": [
+            "user11681.jpp.synthesis.Jpp"
         ]
     },
     "authors": [

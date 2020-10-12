@@ -1,4 +1,4 @@
-package user11681.jpp.api;
+package user11681.jpp.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;

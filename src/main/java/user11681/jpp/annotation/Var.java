@@ -1,18 +1,17 @@
-package user11681.jpp.api;
+package user11681.jpp.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Target;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 /**
  * a repeatable annotation that describes a synthetic field declaration.<br>
  * It is intended to be used with {@link Getter} or {@link Setter}.
  */
 @Target(ElementType.TYPE)
-@Repeatable(Declare.Fields.class)
-public @interface Declare {
+@Repeatable(Var.Vars.class)
+public @interface Var {
     /**
      * The default access for generated fields is {@code public}.
      */
@@ -30,7 +29,7 @@ public @interface Declare {
     String name();
 
     /**
-     * @return the descriptor of the field to generate.
+     * @return the descriptor or type name of the field to generate.
      * <br><br>
      * <h3>descriptors</h3>
      * void: V<br>
@@ -42,16 +41,16 @@ public @interface Declare {
      * long: J<br>
      * float: F<br>
      * double: D<br>
-     * any non-array non-primitive type: L + {@linkplain Type#getInternalName internal name} + ;<br>
+     * any non-array non-primitive type: the fully qualified name of the class in any valid format<br>
      * array: [ + descriptor of component class
      */
     String descriptor();
 
     @Target(ElementType.TYPE)
-    @interface Fields {
+    @interface Vars {
         /**
          * @return information about the fields to generate in the annotated type.
          */
-        Declare[] value();
+        Var[] value();
     }
 }

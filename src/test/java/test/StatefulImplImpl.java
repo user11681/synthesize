@@ -1,7 +1,7 @@
-package user11681.jpp;
+package test;
 
-import user11681.jpp.api.Getter;
-import user11681.jpp.api.Setter;
+import user11681.jpp.annotation.Getter;
+import user11681.jpp.annotation.Setter;
 
 public class StatefulImplImpl extends StatefulImpl implements StatefulInterface {
     public StatefulImplImpl(int thing) {

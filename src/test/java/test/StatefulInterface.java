@@ -1,14 +1,14 @@
-package user11681.jpp;
+package test;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import user11681.jpp.api.Declare;
-import user11681.jpp.api.Getter;
-import user11681.jpp.api.Initializer;
-import user11681.jpp.api.Setter;
+import user11681.jpp.annotation.Var;
+import user11681.jpp.annotation.Getter;
+import user11681.jpp.annotation.Initializer;
+import user11681.jpp.annotation.Setter;
 
-@Declare(name = "energy", descriptor = "J")
-@Declare(name = "width", descriptor = "I")
+@Var(name = "energy", descriptor = "J")
+@Var(name = "width", descriptor = "I")
 public interface StatefulInterface {
     Logger LOGGER = LogManager.getLogger("StatefulInterface");
 

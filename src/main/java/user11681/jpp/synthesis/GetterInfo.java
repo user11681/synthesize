@@ -2,8 +2,8 @@ package user11681.jpp.synthesis;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
-import user11681.jpp.asm.ASMUtil;
-import user11681.jpp.asm.DelegatingInsnList;
+import user11681.shortcode.Shortcode;
+import user11681.shortcode.instruction.DelegatingInsnList;
 
 public class GetterInfo extends AccessorInfo {
     public GetterInfo(final MethodNode method) {
@@ -16,7 +16,7 @@ public class GetterInfo extends AccessorInfo {
 
         method.visitVarInsn(Opcodes.ALOAD, 0);
         method.visitFieldInsn(Opcodes.GETFIELD, owner, this.fieldName, this.fieldDescriptor);
-        method.visitInsn(ASMUtil.getReturnOpcode(this.fieldDescriptor));
+        method.visitInsn(Shortcode.getReturnOpcode(this.fieldDescriptor));
 
         return method;
     }
@@ -28,6 +28,6 @@ public class GetterInfo extends AccessorInfo {
         instructions.addVarInsn(Opcodes.ALOAD, 0);
         instructions.addFieldInsn(Opcodes.GETFIELD, owner, this.fieldName, this.fieldDescriptor);
 
-        ASMUtil.insertBeforeEveryReturn(method, instructions);
+        Shortcode.insertBeforeEveryReturn(method, instructions);
     }
 }

@@ -1,4 +1,4 @@
-package user11681.jpp.api;
+package user11681.jpp.annotation;
 
 /**
  * an enum for determining the mode of resolution of specified {@link Getter#access} and {@link Setter#access}.

@@ -1,9 +1,9 @@
-package user11681.jpp;
+package test;
 
-import user11681.jpp.api.Declare;
+import user11681.jpp.annotation.Var;
 
-@Declare(name = "test", descriptor = "I")
-@Declare(name = "field", descriptor = "Ljava/lang/Object;")
+@Var(name = "test", descriptor = "I")
+@Var(name = "field", descriptor = "Ljava/lang/Object;")
 public class StatefulImpl implements ExtraStatefulInterface {
     private int anotherThing = 123;
 

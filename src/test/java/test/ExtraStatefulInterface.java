@@ -1,4 +1,4 @@
-package user11681.jpp;
+package test;
 
 public interface ExtraStatefulInterface extends StatefulInterface {
 }
