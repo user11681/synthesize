@@ -16,16 +16,6 @@ repositories {
     mavenLocal()
 
     maven {url = "https://dl.bintray.com/user11681/maven"}
-    maven {url = "https://dl.bintray.com/ladysnake/libs"}
-    maven {url = "https://dl.bintray.com/zundrel/wrenchable"}
-    maven {url = "https://dl.bintray.com/earthcomputer/mods"}
-    maven {url = "https://maven.blamejared.com"}
-    maven {url = "https://maven.dblsaiko.net/"}
-    maven {url = "https://maven.jamieswhiteshirt.com/libs-release"}
-    maven {url = "https://mod-buildcraft.com/maven"}
-    maven {url = "https://raw.githubusercontent.com/Devan-Kerman/Devan-Repo/master"}
-    maven {url = "https://server.bbkr.space/artifactory/libs-release"}
-    maven {url = "https://jitpack.io"}
 }
 
 dependencies {
