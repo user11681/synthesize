@@ -1,0 +1,10 @@
+{
+    "schemaVersion": 1,
+    "id": "jpptest",
+    "version": "0.1.0",
+    "entrypoints": {
+        "main": [
+            "user11681.jpp.test.JppTest::init"
+        ]
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "schemaVersion": 1,
+    "name": "jpp",
+    "id": "jpp",
+    "description": "just what Dr. Java never wanted",
+    "version": "${version}",
+    "license": "GNU GPL v3.0",
+    "icon": "assets/jpp/icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "gfh:prePrePreLaunch": [
+            "user11681.jpp.synthesis.JppTransformer"
+        ]
+    },
+    "authors": [
+        "user11681"
+    ],
+    "custom": {
+        "modmenu:api": true
+    }
+}

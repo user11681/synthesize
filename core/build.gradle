@@ -1,0 +1,3 @@
+compileJava {
+    options.annotationProcessorPath = project.files("src/main/java/user11681/jpp/annotation/processor")
+}

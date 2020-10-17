@@ -1,0 +1,3 @@
+dependencies {
+    annotationProcessor(implementation(project(":core")))
+}
